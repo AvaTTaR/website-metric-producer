@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: application-met
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: app-met
+  name: app-met
+  namespace: application-met
+spec: 
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app-met
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: app-met
+    spec:
+      containers:
+      - image: avattar/app-met:<TAG>
+        name: app-met
+        env:
+          - name: POSTGRES_DB_USER
+            valueFrom:
+              secretKeyRef:
+                name: app-met-secret
+                key: POSTGRES_DB_USER
+          - name: POSTGRES_DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: app-met-secret
+                key: POSTGRES_DB_PASSWORD
+          - name: POSTGRES_DB_HOST
+            value: "psql-postgresql.application-met.svc.cluster.local"
+          - name: POSTGRES_DB_PORT
+            value: "5432"
+          - name: POSTGRES_DB_DATABASE
+            value: "app-met"
+          - name: TARGET_SIMULATOR_HOST
+            value: "https://simple-flask-website-simulator.herokuapp.com"
+          - name: KAFKA_HOST_PORT
+            value: "kafka.kafka.svc.cluster.local:9092"
+          - name: KAFKA_TOPIC
+            value: "app-met-topic"
+          - name: KAFKA_CLIENT_ID
+            value: "appmet"
+          - name: KAFKA_GROUP_ID
+            value: "apps"
+          - name: APP_COMAND
+            value: "<APP_COMMAND>"
+        resources:
+          limits:
+            memory: "200Mi"
+            cpu: "100m"
+          requests:
+            memory: "150Mi"
+            cpu: "10m"
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
