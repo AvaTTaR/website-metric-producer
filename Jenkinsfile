@@ -57,16 +57,16 @@ pipeline {
                     sh '''
                     if [[ "$(kubectl -n application-met get deploy)" ]]
                     then
-                        if [[ "$(cat redeploy.txt) == "1" ]]
+                        if [[ "$(cat redeploy.txt)" == "1" ]]
                         then
                             echo "Redeploy is set to 1"
                             sed -i "s/<APP_COMMAND>/--force-init-db run/" deployment.yaml
                             sed -i "s/<TAG>/${BUILD_NUMBER}/" deployment.yaml
                             kubectl apply -f deployment.yaml
-                            if [[ $(kubectl wait --for=condition=available --timeout=180s deployment/app-met -n application-met) ]]
+                            if [[ $(kubectl wait --for=condition=available --timeout=180s deployment/fp-app-met -n application-met) ]]
                             then
                                 echo Deploy started, changing env.
-                                kubectl set env deployment app-met APP_COMAND=run -n application-met
+                                kubectl set env deployment fp-app-met APP_COMAND=run -n application-met
                             else 
                                 echo Application is not starting, exiting
                                 exit 1
@@ -76,17 +76,18 @@ pipeline {
                             sed -i "s/<APP_COMMAND>/run/" deployment.yaml
                             sed -i "s/<TAG>/${BUILD_NUMBER}/" deployment.yaml
                             kubectl apply -f deployment.yaml
+                        fi
                     else
                         echo "There is no active application instances, deploing"
                         sed -i "s/<APP_COMMAND>/--force-init-db run/" deployment.yaml
                         sed -i "s/<TAG>/${BUILD_NUMBER}/" deployment.yaml
                         kubectl apply -f deployment.yaml
-                        if [[ $(kubectl wait --for=condition=available --timeout=180s deployment/app-met -n application-met) ]]
+                        if [[ $(kubectl wait --for=condition=available --timeout=180s deployment/fp-app-met -n application-met) ]]
                         then
-                            echo Deploy started, changing env.
-                            kubectl set env deployment app-met APP_COMAND=run -n application-met
+                            echo "Deploy started, changing env."
+                            kubectl set env deployment fp-app-met APP_COMAND=run -n application-met
                         else 
-                            echo Application is not starting, exiting
+                            echo "Application is not starting, exiting"
                             exit 1
                         fi
                       

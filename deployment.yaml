@@ -26,7 +26,7 @@ spec:
         app: app-met
     spec:
       containers:
-      - image: avattar/app-met:<TAG>
+      - image: avattar/fp-app-met:<TAG>
         name: app-met
         env:
           - name: POSTGRES_DB_USER
