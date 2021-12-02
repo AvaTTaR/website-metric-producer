@@ -63,14 +63,9 @@ pipeline {
                             sed -i "s/<APP_COMMAND>/--force-init-db run/" deployment.yaml
                             sed -i "s/<TAG>/${BUILD_NUMBER}/" deployment.yaml
                             kubectl apply -f deployment.yaml
-                            if [[ $(kubectl wait --for=condition=available --timeout=180s deployment/app-met -n application-met) ]]
-                            then
-                                echo Deploy started, changing env.
-                                kubectl set env deployment app-met APP_COMAND=run -n application-met
-                            else 
-                                echo Application is not starting, exiting
-                                exit 1
-                            fi
+                            kubectl wait --for=condition=available --timeout=180s deployment/app-met -n application-met
+                            echo Deploy started, changing env.
+                            kubectl set env deployment app-met APP_COMAND=run -n application-met
                         else
                             echo "Redeploy is not enabled"
                             sed -i "s/<APP_COMMAND>/run/" deployment.yaml
@@ -82,14 +77,9 @@ pipeline {
                         sed -i "s/<APP_COMMAND>/--force-init-db run/" deployment.yaml
                         sed -i "s/<TAG>/${BUILD_NUMBER}/" deployment.yaml
                         kubectl apply -f deployment.yaml
-                        if [[ $(kubectl wait --for=condition=available --timeout=180s deployment/app-met -n application-met) ]]
-                        then
-                            echo "Deploy started, changing env."
-                            kubectl set env deployment app-met APP_COMAND=run -n application-met
-                        else 
-                            echo "Application is not starting, exiting"
-                            exit 1
-                        fi
+                        kubectl wait --for=condition=available --timeout=180s deployment/app-met -n application-met
+                        echo "Deploy started, changing env."
+                        kubectl set env deployment app-met APP_COMAND=run -n application-met
                       
                    fi
                   '''
