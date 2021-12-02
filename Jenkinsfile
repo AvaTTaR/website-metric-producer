@@ -44,16 +44,16 @@ pipeline {
     stages {
         stage('Build image'){
             steps {
-                //checkout scm
-                git url: 'https://github.com/AvaTTaR/website-metric-producer.git', branch: 'main'
+                checkout scm
+                //git url: 'https://github.com/AvaTTaR/website-metric-producer.git', branch: 'main'
                 sh '/kaniko/executor --context "`pwd`" --destination avattar/fp-app-met:${BUILD_NUMBER}'
             }
         }
         stage('Deploy') {
             steps {
                 container('kubectl') {
-                //checkout scm
-                git url: 'https://github.com/AvaTTaR/website-metric-producer.git', branch: 'main'
+                checkout scm
+                //git url: 'https://github.com/AvaTTaR/website-metric-producer.git', branch: 'main'
                     sh '''
                     if [[ "$(kubectl -n application-met get deploy)" ]]
                     then
@@ -63,10 +63,10 @@ pipeline {
                             sed -i "s/<APP_COMMAND>/--force-init-db run/" deployment.yaml
                             sed -i "s/<TAG>/${BUILD_NUMBER}/" deployment.yaml
                             kubectl apply -f deployment.yaml
-                            if [[ $(kubectl wait --for=condition=available --timeout=180s deployment/fp-app-met -n application-met) ]]
+                            if [[ $(kubectl wait --for=condition=available --timeout=180s deployment/app-met -n application-met) ]]
                             then
                                 echo Deploy started, changing env.
-                                kubectl set env deployment fp-app-met APP_COMAND=run -n application-met
+                                kubectl set env deployment app-met APP_COMAND=run -n application-met
                             else 
                                 echo Application is not starting, exiting
                                 exit 1
@@ -82,10 +82,10 @@ pipeline {
                         sed -i "s/<APP_COMMAND>/--force-init-db run/" deployment.yaml
                         sed -i "s/<TAG>/${BUILD_NUMBER}/" deployment.yaml
                         kubectl apply -f deployment.yaml
-                        if [[ $(kubectl wait --for=condition=available --timeout=180s deployment/fp-app-met -n application-met) ]]
+                        if [[ $(kubectl wait --for=condition=available --timeout=180s deployment/app-met -n application-met) ]]
                         then
                             echo "Deploy started, changing env."
-                            kubectl set env deployment fp-app-met APP_COMAND=run -n application-met
+                            kubectl set env deployment app-met APP_COMAND=run -n application-met
                         else 
                             echo "Application is not starting, exiting"
                             exit 1
