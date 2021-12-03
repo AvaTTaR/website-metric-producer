@@ -41,6 +41,10 @@ pipeline {
             '''
         }
     }
+    triggers {
+        pollSCM('* * * * *')
+        githubPush()
+    }
     stages {
         stage('Build image'){
             steps {
@@ -59,7 +63,8 @@ pipeline {
                     then
                         if [[ "$(cat redeploy.txt)" == "1" ]]
                         then
-                            echo "Redeploy is set to 1"
+                            echo "Redeploy is set to 1. clean kafka topic and deploy with --force-init-db"
+                            kubectl -n kafka exec -it kafka-0 -- /opt/bitnami/kafka/bin/kafka-topics.sh --bootstrap-server kafka.kafka.svc.cluster.local:9092 --delete --topic app-met-topic
                             sed -i "s/<APP_COMMAND>/--force-init-db run/" deployment.yaml
                             sed -i "s/<TAG>/${BUILD_NUMBER}/" deployment.yaml
                             kubectl apply -f deployment.yaml
